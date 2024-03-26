@@ -10,7 +10,6 @@ import { object, string } from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { SectionContent } from "./components/Section/indes";
 import { ContentForm } from "./components/form";
-
 interface PropsData {
   id?: string;
   name: string;
@@ -34,6 +33,8 @@ function App() {
   const [dataContacts, setDataContacts] = useState<PropsData[]>([]);
   const [dataContacttId, setDataContactId] = useState<PropsData>();
   const [openModalRegister, setOpenModalRegister] = useState(false);
+
+  const [search, setSearch] = useState<string>("");
 
   const getContacts = () => {
     axios.get("http://localhost:3000/contacts").then((res) => {
@@ -71,6 +72,27 @@ function App() {
     });
   };
 
+  const ordenarPorNomeAlfabetico = (orderContacts: PropsData[]) => {
+    return orderContacts.sort((a, b) => {
+      const nameA = a.name.toUpperCase();
+      const nameB = b.name.toUpperCase();
+      if (nameA < nameB) {
+        return -1;
+      }
+      if (nameA > nameB) {
+        return 1;
+      }
+      return 0;
+    });
+  };
+
+  const contactsOrdenados = ordenarPorNomeAlfabetico(dataContacts);
+
+  const searchLowerCase = search?.toLowerCase();
+  const filterContacts = contactsOrdenados?.filter((item: PropsData) =>
+    item?.name.toLowerCase().includes(searchLowerCase)
+  );
+
   useEffect(() => {
     getContacts();
   }, []);
@@ -84,11 +106,21 @@ function App() {
 
   return (
     <>
+      <div>
+        <label>Busca rapida: </label>
+        <input
+          placeholder="Pesquise aqui..."
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+
       <TitlePage title="Meus contatos" />
 
       <SectionContent>
         <button onClick={() => setOpenModalRegister(true)}>Novo</button>
-        {dataContacts.map((itens: PropsData) => (
+        {filterContacts.map((itens: PropsData) => (
           <Accordion
             title={itens.name}
             numberCel={itens.numberCel}
@@ -132,7 +164,9 @@ function App() {
 
               <div>
                 <button type="submit">Adicionar</button>
-                <button onClick={() => setOpenModalRegister(false)}>Cancelar</button>
+                <button onClick={() => setOpenModalRegister(false)}>
+                  Cancelar
+                </button>
               </div>
             </ContentForm>
           </form>
